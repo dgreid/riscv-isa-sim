@@ -453,6 +453,13 @@ public:
 
       reg_t set_vl(int rd, int rs1, reg_t reqVL, reg_t newType);
 
+      // Returns true if elm_idx should be skipped for the given instruction,
+      // meaning it is masked or out or range.
+      bool skip_element(const reg_t elm_idx, const insn_t insn);
+
+      // Returns true if elm_idx is mased for the given instruction.
+      bool element_masked(const reg_t elm_idx, const insn_t insn);
+
       reg_t get_vlen() { return VLEN; }
       reg_t get_elen() { return ELEN; }
       reg_t get_slen() { return VLEN; }
@@ -465,5 +472,30 @@ public:
   vectorUnit_t VU;
   triggers::module_t TM;
 };
+
+inline bool processor_t::vectorUnit_t::skip_element(const reg_t elm_idx, const insn_t insn)
+{
+  if (elm_idx >= vl->read()) {
+    return true;
+  } else if (elm_idx < vstart->read()) {
+    return true;
+  }
+
+  return element_masked(elm_idx, insn);
+}
+
+inline bool processor_t::vectorUnit_t::element_masked(const reg_t elm_idx, const insn_t insn)
+{
+  const int midx = elm_idx / 64;
+  const int mpos = elm_idx % 64;
+  if (insn.v_vm() == 0) {
+    bool skip = ((elt<uint64_t>(0, midx) >> mpos) & 0x1) == 0;
+    if (skip) {
+        return true;
+    }
+  }
+
+  return false;
+}
 
 #endif

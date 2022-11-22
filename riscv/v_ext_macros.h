@@ -11,22 +11,11 @@
   const int mpos = i % 64;
 
 #define VI_LOOP_ELEMENT_SKIP() \
-  VI_MASK_VARS \
-  if (insn.v_vm() == 0) { \
-    bool skip = ((P.VU.elt<uint64_t>(0, midx) >> mpos) & 0x1) == 0; \
-    if (skip) { \
-        continue; \
-    } \
-  }
+  if (P.VU.element_masked(i, insn)) continue; \
+  VI_MASK_VARS; \
 
 #define VI_ELEMENT_SKIP \
-  if (i >= vl) { \
-    continue; \
-  } else if (i < P.VU.vstart->read()) { \
-    continue; \
-  } else { \
-    VI_LOOP_ELEMENT_SKIP(); \
-  }
+  if (P.VU.skip_element(i, insn)) continue;
 
 //
 // vector: operation and register acccess check helper
