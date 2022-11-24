@@ -10,10 +10,9 @@
   const int midx = i / 64; \
   const int mpos = i % 64;
 
-#define VI_LOOP_ELEMENT_SKIP(BODY) \
+#define VI_LOOP_ELEMENT_SKIP() \
   VI_MASK_VARS \
   if (insn.v_vm() == 0) { \
-    BODY; \
     bool skip = ((P.VU.elt<uint64_t>(0, midx) >> mpos) & 0x1) == 0; \
     if (skip) { \
         continue; \
@@ -286,9 +285,10 @@ static inline bool is_aligned(const unsigned val, const unsigned pos)
 
 #define VI_LOOP_NSHIFT_BASE \
   VI_GENERAL_LOOP_BASE; \
-  VI_LOOP_ELEMENT_SKIP({ \
+  if (insn.v_vm() == 0) { \
     require(!(insn.rd() == 0 && P.VU.vflmul > 1)); \
-  });
+  } \
+  VI_LOOP_ELEMENT_SKIP();
 
 #define INT_ROUNDING(result, xrm, gb) \
   do { \
